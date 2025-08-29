@@ -1,0 +1,17 @@
+# docker-compose.yml
+version: '3.8'
+services:
+  db:
+    image: postgres:15-alpine  # Hafif ve güncel bir PostgreSQL imajı
+    restart: always
+    environment:
+      - POSTGRES_USER=furkan
+      - POSTGRES_PASSWORD=F.dogan1362-+
+      - POSTGRES_DB=eticaret_db
+    ports:
+      - '5432:5432' # Bilgisayarındaki 5432 portunu Docker'daki 5432'ye bağla
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
