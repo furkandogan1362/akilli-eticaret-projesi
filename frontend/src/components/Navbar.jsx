@@ -29,6 +29,7 @@ function Navbar() {
         {token ? (
           // Eğer token varsa (kullanıcı giriş yapmışsa)
           <>
+            <Link to="/favorites" style={linkStyle}>Favorilerim</Link> {/* Bu satırı ekle */}
             <Link to="/cart" style={linkStyle}>Sepetim</Link>
             <button onClick={handleLogout} style={buttonStyle}>Çıkış Yap</button>
           </>

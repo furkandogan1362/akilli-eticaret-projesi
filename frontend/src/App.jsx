@@ -5,6 +5,8 @@ import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProductDetailPage from './pages/ProductDetailPage';
+import FavoritesPage from './pages/FavoritesPage'; // Bu satırı ekle
+
 
 
 // Sayfaları import et
@@ -30,6 +32,8 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/cart" element={<CartPage />} /> {/* Bu satırı ekle */}
+          <Route path="/favorites" element={<FavoritesPage />} /> {/* Bu satırı ekle */}
+
 
         </Routes>
       </main>
