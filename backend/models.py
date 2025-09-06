@@ -28,6 +28,8 @@ class Kullanici(db.Model):
     sifre_hash = db.Column(db.String(256), nullable=False)
     olusturulma_tarihi = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
+    is_admin = db.Column(db.Boolean, nullable=False, default=False)
+
     siparisler = db.relationship('Siparis', backref='kullanici', lazy=True)
 
     # YENİ İLİŞKİ

@@ -25,6 +25,10 @@ def register():
     # Modeldaki fonksiyonu kullanarak şifreyi hash'le ve kaydet
     yeni_kullanici.set_sifre(data['password'])
 
+    # YENİ KONTROL: Eğer veritabanında hiç kullanıcı yoksa, bu ilk kullanıcıyı admin yap.
+    if Kullanici.query.count() == 0:
+        yeni_kullanici.is_admin = True
+
     # Veritabanına ekle ve değişiklikleri kaydet
     db.session.add(yeni_kullanici)
     db.session.commit()
@@ -45,10 +49,16 @@ def login():
     if not kullanici or not kullanici.check_sifre(data['password']):
         return jsonify({'message': 'Geçersiz e-posta veya şifre!'}), 401
 
-    # Token oluşturma
+    # --- EN ÖNEMLİ KISIM BURASI ---
+    # Token'ı oluştururken 'is_admin' bilgisini payload'a eklediğimizden emin olmalıyız.
     token = jwt.encode({
         'user_id': kullanici.id,
-        'exp': datetime.now(timezone.utc) + timedelta(hours=24) # Token 24 saat geçerli olacak
+        'exp': datetime.now(timezone.utc) + timedelta(hours=24),
+        'is_admin': kullanici.is_admin 
     }, app.config['SECRET_KEY'], algorithm="HS256")
 
-    return jsonify({'token': token}), 200
+    # Cevapta da bu bilgiyi gönderiyoruz
+    return jsonify({
+        'token': token,
+        'is_admin': kullanici.is_admin 
+    }), 200

@@ -39,6 +39,8 @@ from api import auth_routes
 from api import product_routes
 from api import order_routes # Bu satırı ekle
 from api import favorites_routes # Bu satırı ekle
+from api import admin_routes # Bu satırı ekle
+
 
 
 if __name__ == '__main__':

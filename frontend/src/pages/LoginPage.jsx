@@ -1,13 +1,17 @@
 // frontend/src/pages/LoginPage.jsx
+
 import { useState } from 'react';
 import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom'; // useNavigate'i import et
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // Değişiklik 1: Kendi hook'umuzu import et
 
 function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
-  const navigate = useNavigate(); // useNavigate hook'unu kullanıma hazırla
+  const navigate = useNavigate();
+  
+  const { login } = useAuth(); // Değişiklik 2: login fonksiyonunu context'ten al
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -18,12 +22,17 @@ function LoginPage() {
         email: email,
         password: password
       });
-
-      // Gelen token'ı localStorage'a kaydet
-      localStorage.setItem('token', response.data.token);
-
-      // Kullanıcıyı ana sayfaya yönlendir
-      navigate('/');
+      
+      // Değişiklik 3: Merkezi login fonksiyonunu çağırarak token'ı context'e gönder
+      // Context, hem state'i güncelleyecek hem de localStorage'a kaydedecek.
+      login(response.data.token);
+      
+      // Adminse admin paneline, değilse ana sayfaya yönlendir
+      if (response.data.is_admin) {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
 
     } catch (error) {
       setMessage(error.response?.data?.message || 'Bir hata oluştu.');
