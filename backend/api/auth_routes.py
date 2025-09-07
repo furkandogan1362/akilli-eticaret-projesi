@@ -8,31 +8,27 @@ from datetime import datetime, timedelta, timezone
 
 @app.route('/api/auth/register', methods=['POST'])
 def register():
-    """Yeni bir kullanıcıyı kaydeder."""
-    # İstekten gelen JSON verisini al
     data = request.get_json()
+    # Yeni alanları da al
+    if not data or not data.get('email') or not data.get('password') or not data.get('ad') or not data.get('soyad'):
+        return jsonify({'message': 'Tüm alanlar zorunludur!'}), 400
 
-    # Gerekli alanlar var mı kontrol et
-    if not data or not data.get('email') or not data.get('password'):
-        return jsonify({'message': 'E-posta ve şifre alanları zorunludur!'}), 400
-
-    # E-posta daha önce alınmış mı kontrol et
     if Kullanici.query.filter_by(email=data['email']).first():
         return jsonify({'message': 'Bu e-posta adresi zaten kullanılıyor!'}), 409
 
-    # Yeni bir Kullanici nesnesi oluştur
-    yeni_kullanici = Kullanici(email=data['email'])
-    # Modeldaki fonksiyonu kullanarak şifreyi hash'le ve kaydet
+    # Yeni kullanıcıyı ad ve soyad ile oluştur
+    yeni_kullanici = Kullanici(
+        email=data['email'],
+        ad=data['ad'],
+        soyad=data['soyad']
+    )
     yeni_kullanici.set_sifre(data['password'])
 
-    # YENİ KONTROL: Eğer veritabanında hiç kullanıcı yoksa, bu ilk kullanıcıyı admin yap.
     if Kullanici.query.count() == 0:
         yeni_kullanici.is_admin = True
 
-    # Veritabanına ekle ve değişiklikleri kaydet
     db.session.add(yeni_kullanici)
     db.session.commit()
-
     return jsonify({'message': 'Kullanıcı başarıyla oluşturuldu!'}), 201
 
 
@@ -54,7 +50,9 @@ def login():
     token = jwt.encode({
         'user_id': kullanici.id,
         'exp': datetime.now(timezone.utc) + timedelta(hours=24),
-        'is_admin': kullanici.is_admin 
+        'is_admin': kullanici.is_admin ,
+        'full_name': f"{kullanici.ad} {kullanici.soyad}" # YENİ
+
     }, app.config['SECRET_KEY'], algorithm="HS256")
 
     # Cevapta da bu bilgiyi gönderiyoruz

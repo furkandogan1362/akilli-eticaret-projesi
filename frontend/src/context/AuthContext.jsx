@@ -19,7 +19,9 @@ export const AuthProvider = ({ children }) => {
                     setUser({
                         token: token,
                         is_admin: decoded.is_admin,
-                        id: decoded.user_id // ✅ burayı da ekledik
+                        id: decoded.user_id,// ✅ burayı da ekledik
+                        full_name: decoded.full_name // YENİ
+
                     });
                 } else {
                     localStorage.removeItem('token');
@@ -39,7 +41,9 @@ export const AuthProvider = ({ children }) => {
         setUser({
             token: token,
             is_admin: decoded.is_admin,
-            id: decoded.user_id   // ✅ burayı da ekledik
+            id: decoded.user_id  , // ✅ burayı da ekledik
+            full_name: decoded.full_name // YENİ
+
         });
     };
 

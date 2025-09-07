@@ -5,6 +5,8 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 
 function RegisterPage() {
+  const [ad, setAd] = useState(''); // YENİ
+  const [soyad, setSoyad] = useState(''); // YENİ
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState(''); // Başarı veya hata mesajı için
@@ -15,6 +17,8 @@ function RegisterPage() {
 
     try {
       const response = await axios.post('http://127.0.0.1:5000/api/auth/register', {
+        ad: ad, // YENİ
+        soyad: soyad, // YENİ
         email: email,
         password: password
       });
@@ -34,6 +38,15 @@ function RegisterPage() {
     <div style={formContainerStyle}>
       <h2>Kayıt Ol</h2>
       <form onSubmit={handleRegister}>
+        {/* YENİ FORUM ALANLARI */}
+        <div>
+          <label>Ad:</label>
+          <input type="text" value={ad} onChange={(e) => setAd(e.target.value)} required style={inputStyle} />
+        </div>
+        <div>
+          <label>Soyad:</label>
+          <input type="text" value={soyad} onChange={(e) => setSoyad(e.target.value)} required style={inputStyle} />
+        </div>
         <div>
           <label>E-posta:</label>
           <input
