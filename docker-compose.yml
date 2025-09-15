@@ -1,4 +1,4 @@
-# docker-compose.yml
+# C:\Users\furka\akilli-eticaret-projesi\docker-compose.yml
 version: '3.8'
 services:
   db:
