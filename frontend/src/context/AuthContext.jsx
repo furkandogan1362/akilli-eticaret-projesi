@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
                 if (decoded.exp * 1000 > Date.now()) {
                     setUser({
                         token: token,
-                        is_admin: decoded.is_admin,
+                        role: decoded.role, // is_admin -> role
                         id: decoded.user_id,// ✅ burayı da ekledik
                         full_name: decoded.full_name // YENİ
 
@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }) => {
         const decoded = jwtDecode(token);
         setUser({
             token: token,
-            is_admin: decoded.is_admin,
+            role: decoded.role, // is_admin -> role
             id: decoded.user_id  , // ✅ burayı da ekledik
             full_name: decoded.full_name // YENİ
 

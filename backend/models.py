@@ -30,7 +30,8 @@ class Kullanici(db.Model):
      # YENİ ALANLAR
     ad = db.Column(db.String(50), nullable=True)
     soyad = db.Column(db.String(50), nullable=True)
-    is_admin = db.Column(db.Boolean, nullable=False, default=False)
+    # YENİ ROLE ALANI
+    role = db.Column(db.String(20), nullable=False, default='user') # roller: 'user', 'moderator', 'admin'
 
     siparisler = db.relationship('Siparis', backref='kullanici', lazy=True)
 

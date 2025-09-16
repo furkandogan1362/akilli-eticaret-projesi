@@ -12,7 +12,7 @@ const ProtectedRoute = ({ children }) => {
     }
 
     // Değişiklik 3: Yükleme bittikten sonra, kullanıcı kontrolünü yap
-    if (!user || !user.is_admin) {
+    if (!user || !['admin', 'moderator'].includes(user.role)) {
         return <Navigate to="/" replace />;
     }
 
