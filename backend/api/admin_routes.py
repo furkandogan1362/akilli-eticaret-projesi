@@ -2,7 +2,9 @@
 
 from flask import request, jsonify
 from app import app, db
+# Değişiklik: SQLAlchemy'den 'or_' fonksiyonunu import et
 from models import Urun, Kullanici, SiparisUrunleri, kullanici_favorileri, Siparis
+from sqlalchemy import or_
 from utils.decorators import role_required
 
 # --- ÜRÜN YÖNETİMİ ---
@@ -67,22 +69,39 @@ def delete_product(current_user, urun_id):
 @role_required('admin', 'moderator')
 def manage_users(current_user):
     if request.method == 'POST':
-        if current_user.role != 'admin':
-            return jsonify({'message': 'Sadece adminler yeni kullanıcı ekleyebilir.'}), 403
+        # Artık hem admin hem moderatör kullanıcı ekleyebilir
+
         data = request.get_json()
         required_fields = ['ad', 'soyad', 'email', 'password']
         if not all(field in data for field in required_fields):
             return jsonify({'message': 'Tüm alanlar (ad, soyad, email, şifre) zorunludur!'}), 400
         if Kullanici.query.filter_by(email=data['email']).first():
             return jsonify({'message': 'Bu e-posta adresi zaten kullanılıyor!'}), 409
+
+        # Moderatör tarafından oluşturulan kullanıcıların rolü her zaman 'user' olur
+        role = 'user'
+        if 'role' in data and data['role'] in ['user', 'moderator']:
+            if current_user.id == 1:  # Sadece ana admin rol atayabilir
+                role = data['role']
+            # Moderatörler rol atayamaz, varsayılan 'user' kullanılır
+
         try:
-            yeni_kullanici = Kullanici(email=data['email'], ad=data['ad'], soyad=data['soyad'])
+            yeni_kullanici = Kullanici(
+                email=data['email'], 
+                ad=data['ad'], 
+                soyad=data['soyad'],
+                role=role
+            )
             yeni_kullanici.set_sifre(data['password'])
             db.session.add(yeni_kullanici)
             db.session.commit()
+
             user_data = {
-                'id': yeni_kullanici.id, 'email': yeni_kullanici.email, 'ad': yeni_kullanici.ad,
-                'soyad': yeni_kullanici.soyad, 'role': yeni_kullanici.role,
+                'id': yeni_kullanici.id,
+                'email': yeni_kullanici.email,
+                'ad': yeni_kullanici.ad,
+                'soyad': yeni_kullanici.soyad,
+                'role': yeni_kullanici.role,
                 'olusturulma_tarihi': yeni_kullanici.olusturulma_tarihi.isoformat()
             }
             return jsonify(user_data), 201
@@ -91,26 +110,54 @@ def manage_users(current_user):
             return jsonify({'message': 'Kullanıcı oluşturulurken bir hata oluştu.', 'error': str(e)}), 500
 
     if request.method == 'GET':
-        kullanicilar = Kullanici.query.order_by(Kullanici.id).all()
+        # Temel sorgu: tüm kullanıcılar
+        query = Kullanici.query
+
+        # 1. ROL FİLTRESİ
+        role_filter = request.args.get('role', type=str)
+        if role_filter and role_filter in ['admin', 'moderator', 'user']:
+            query = query.filter(Kullanici.role == role_filter)
+
+        # 2. ARAMA PARAMETRESİ
+        search_term = request.args.get('search', type=str)
+        if search_term:
+            search_pattern = f"%{search_term}%"
+            query = query.filter(or_(
+                (Kullanici.ad + ' ' + Kullanici.soyad).ilike(search_pattern),
+                Kullanici.email.ilike(search_pattern)
+            ))
+
+        # Sorguyu ID'ye göre sırala ve çalıştır
+        kullanicilar = query.order_by(Kullanici.id).all()
+        
         user_list = [{
-            'id': u.id, 'email': u.email, 'ad': u.ad, 'soyad': u.soyad,
+            'id': u.id,
+            'email': u.email,
+            'ad': u.ad,
+            'soyad': u.soyad,
             'role': u.role,
             'olusturulma_tarihi': u.olusturulma_tarihi.isoformat() if u.olusturulma_tarihi else None
         } for u in kullanicilar]
         return jsonify(user_list), 200
 
+
 @app.route('/api/admin/users/<int:kullanici_id>', methods=['PUT'])
-@role_required('admin')
+@role_required('admin', 'moderator')
 def update_user(current_user, kullanici_id):
     if kullanici_id == 1:
         return jsonify({'message': 'Ana admin hesabı değiştirilemez!'}), 403
     user_to_update = Kullanici.query.get_or_404(kullanici_id)
+
+    if current_user.role == 'moderator' and user_to_update.role in ['admin', 'moderator']:
+        return jsonify({'message': 'Moderatörler, diğer yetkilileri güncelleyemez!'}), 403
+    
     data = request.get_json()
     if 'email' in data and data['email'] != user_to_update.email:
         if Kullanici.query.filter_by(email=data['email']).first():
             return jsonify({'message': 'Bu e-posta adresi zaten başka bir kullanıcı tarafından kullanılıyor!'}), 409
-    if 'role' in data:
-        if current_user.id != 1:
+    if 'role' in data and data['role'] != user_to_update.role:
+        # Sadece rol DEĞİŞTİRİLMEYE çalışılıyorsa bu bloğa gir
+        if current_user.id != 1: # Sadece ana admin rol değiştirebilir
             return jsonify({'message': 'Rol atama yetkiniz yok!'}), 403
         if data['role'] not in ['user', 'moderator']:
             return jsonify({'message': "Geçersiz rol! Sadece 'user' veya 'moderator' atanabilir."}), 400
