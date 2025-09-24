@@ -40,6 +40,5 @@ from api import admin_routes
 def health_check():
     return jsonify(status="ok", message="Backend is running and connected to DB (theoretically)!")
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  # Local için 5000, deploy için Railway'in verdiği port
-    app.run(host='0.0.0.0', port=port)
+if __name__ == "__main__":
+    app.run(debug=True)
