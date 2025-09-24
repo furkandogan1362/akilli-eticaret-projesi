@@ -1,4 +1,4 @@
 # akilli-eticaret-projesi
 "Kişiselleştirilmiş ürün önerileri sunan yapay zeka destekli e-ticaret platformu."
 
-frontend-production-20f0.up.railway.app
+[Frontend Production](https://frontend-production-20f0.up.railway.app)
