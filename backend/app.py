@@ -40,5 +40,7 @@ from api import admin_routes
 def health_check():
     return jsonify(status="ok", message="Backend is running and connected to DB (theoretically)!")
 
-if __name__ == "__main__":
-    app.run(debug=True)
+# Local debug için
+if __name__ == '__main__':
+    # Local çalıştırma portu
+    app.run(debug=True, port=5000)
