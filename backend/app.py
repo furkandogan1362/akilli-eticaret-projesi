@@ -1,47 +1,45 @@
-# backend/app.py
-
 import os
-from dotenv import load_dotenv # Bu satırı import et
+from dotenv import load_dotenv
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from flask_migrate import Migrate # Bu satırı ekle
+from flask_migrate import Migrate
 
-load_dotenv() # .env dosyasındaki değişkenleri yükler
+# .env dosyasını yükle (local için)
+load_dotenv()
 
-
-# Uygulamayı ve veritabanını başlat
-db = SQLAlchemy()
+# Flask uygulaması
 app = Flask(__name__)
 CORS(app)
 
-# Veritabanı yapılandırması
-basedir = os.path.abspath(os.path.dirname(__file__))
-# YENİ HALİ
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+# Secret Key
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback-secret-key')
+
+# DATABASE_URL: deploy ortamında Railway/Render vs. verir
+# Local geliştirme için DATABASE_URL yoksa DATABASE_URL_LOCAL kullan
+database_url = os.getenv('DATABASE_URL') or os.getenv('DATABASE_URL_LOCAL')
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
-# Veritabanını uygulamaya bağla
-db.init_app(app)
-migrate = Migrate(app, db) # Bu satırı ekle
+# Veritabanı ve migrate
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
-# Test endpoint'i
+# Modelleri import et
+from models import Kullanici, Urun, Siparis
+
+# API rotalarını import et
+from api import auth_routes
+from api import product_routes
+from api import order_routes
+from api import favorites_routes
+from api import admin_routes
+
+# Test endpoint
 @app.route('/api/healthcheck', methods=['GET'])
 def health_check():
     return jsonify(status="ok", message="Backend is running and connected to DB (theoretically)!")
 
-# Modelleri içeri aktar (uygulama ve db oluşturulduktan sonra)
-from models import Kullanici, Urun, Siparis
-
-# API rotalarını içeri aktar
-from api import auth_routes
-from api import product_routes
-from api import order_routes # Bu satırı ekle
-from api import favorites_routes # Bu satırı ekle
-from api import admin_routes # Bu satırı ekle
-
-
-
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get('PORT', 5000))  # Local için 5000, deploy için Railway'in verdiği port
+    app.run(host='0.0.0.0', port=port)
